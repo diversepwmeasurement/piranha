@@ -1,22 +1,17 @@
-name: Detect Changes
-
-on:
-  workflow_call:
-    outputs:
-      legacy:
-        value: ${{ jobs.changes.outputs.legacy }}
-      
-
 jobs:
-  # runs change detection
-  # this job allows build to have a single if
   changes:
-    runs-on: ubuntu-latest
     outputs:
       legacy: ${{ steps.filter.outputs.legacy }}
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v2
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: '.github/filters.yaml'
+    - continue-on-error: true
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      id: filter
+      uses: dorny/paths-filter@v2
+      with:
+        filters: .github/filters.yaml
+name: Detect Changes
+on:
+  repository_dispatch:
+    types: trigger-ga___detect_changes.yml

@@ -1,82 +1,118 @@
-name: Release Polyglot Piranha
-on:
-  workflow_dispatch:
 jobs:
   build_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v4
+    - continue-on-error: true
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
-    - name: Build wheel with Maturin
-      run: |
-        pip install --upgrade maturin
+    - continue-on-error: true
+      name: Build wheel with Maturin
+      run: 'pip install --upgrade maturin
+
         maturin build --release -o dist
+
         maturin build --sdist -o dist
-    - name: Pypi Release for ubuntu-latest
-      run: |
-        pip install twine
+
+        '
+    - continue-on-error: true
+      name: Pypi Release for ubuntu-latest
+      run: 'pip install twine
+
         twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
+
+        '
   build_ubuntu_20:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v4
+    - continue-on-error: true
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
-    - name: Build wheel with Maturin
-      run: |
-        pip install --upgrade maturin
+    - continue-on-error: true
+      name: Build wheel with Maturin
+      run: 'pip install --upgrade maturin
+
         maturin build --release -o dist
+
         maturin build --sdist -o dist
-    - name: Pypi Release for ubuntu-latest
-      run: |
-        pip install twine
+
+        '
+    - continue-on-error: true
+      name: Pypi Release for ubuntu-latest
+      run: 'pip install twine
+
         twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
-  macos_build_x86:
-    name: 'macos-x86'
-    runs-on: [macos-12]
-    strategy:
-      matrix:
-        arch: ['x86_64']
-    env:
-      # Polyglot depends on tree-sitter-python which tries to compile c++ files stdlibc++ which is depreciated in newer version of mac.
-      MACOSX_DEPLOYMENT_TARGET: 10.16
-      CXXFLAGS: -stdlib=libc++ -mmacosx-version-min=10.16
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - name: Build wheel with Maturin
-        run: |
-          pip install --upgrade maturin
-          maturin build --release -o dist
-      - name: Pypi Release for macos-latest
-        run: |
-          pip install twine
-          twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
+
+        '
   macos_build_arm:
-    name: 'macos-arm64'
-    runs-on: [macos-latest]
+    env:
+      CXXFLAGS: -stdlib=libc++
+    name: macos-arm64
+    runs-on: self-hosted
+    steps:
+    - continue-on-error: true
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - continue-on-error: true
+      name: Build wheel with Maturin
+      run: 'rustup target add aarch64-apple-darwin
+
+        pip install --upgrade maturin
+
+        maturin build --release -o dist --target universal2-apple-darwin
+
+        '
+    - continue-on-error: true
+      name: Pypi Release for macos-latest
+      run: 'pip install twine
+
+        twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
+
+        '
     strategy:
       matrix:
-        arch: ['arm64']
+        arch:
+        - arm64
+  macos_build_x86:
     env:
-      # Polyglot depends on tree-sitter-python which tries to compile c++ files stdlibc++ which is depreciated in newer version of mac.
-      CXXFLAGS: -stdlib=libc++
+      CXXFLAGS: -stdlib=libc++ -mmacosx-version-min=10.16
+      MACOSX_DEPLOYMENT_TARGET: 10.16
+    name: macos-x86
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - name: Build wheel with Maturin
-        run: |
-          rustup target add aarch64-apple-darwin
-          pip install --upgrade maturin
-          maturin build --release -o dist --target universal2-apple-darwin
-      - name: Pypi Release for macos-latest
-        run: |
-          pip install twine
-          twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
+    - continue-on-error: true
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - continue-on-error: true
+      name: Build wheel with Maturin
+      run: 'pip install --upgrade maturin
+
+        maturin build --release -o dist
+
+        '
+    - continue-on-error: true
+      name: Pypi Release for macos-latest
+      run: 'pip install twine
+
+        twine upload --skip-existing -u __token__ -p ${{ secrets.PYPI_TOKEN }} dist/*
+
+        '
+    strategy:
+      matrix:
+        arch:
+        - x86_64
+name: Release Polyglot Piranha
+on:
+  repository_dispatch:
+    types: trigger-ga___polyglot_release.yml
